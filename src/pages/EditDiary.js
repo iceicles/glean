@@ -1,4 +1,3 @@
-import EditDiary from '../components/Editor';
 import { Link } from 'react-router-dom';
 
 function EditDiaryPage() {
@@ -8,7 +7,6 @@ function EditDiaryPage() {
       <p>
         Go to <Link to='/diary'>the diary page</Link>
       </p>
-      <EditDiary />
     </>
   );
 }
