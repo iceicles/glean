@@ -2,20 +2,18 @@ import { projectFirestore } from '../firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
 
 const useFirestore = async (
-  collection,
+  topCollection,
   userName,
   entriesCollection,
   entries,
   entry
 ) => {
-  const entriesCollectionRef = doc(
+  const entriesDocumentRef = doc(
     projectFirestore,
-    collection,
-    userName,
-    entriesCollection,
-    entries
+    `${topCollection}/${userName}/${entriesCollection}/${entries}`
   );
-  await setDoc(entriesCollectionRef, {
+
+  await setDoc(entriesDocumentRef, {
     entry,
   });
 };

@@ -3,14 +3,35 @@ import { useState } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import useFirestoreRead from '../hooks/useFirestoreRead';
 
-function DiaryPage() {
+const DiaryPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [canvasClicked, setCanvasClicked] = useState(false);
   const [canvasClickedId, setCanvasClickedId] = useState('');
-  const [entryIdFS, setEntryIdFS] = useState('');
+  const [entryIdFS, setEntryIdFS] = useState(setId('Entry'));
   const [entryValueFS, setEntryValueFS] = useState('');
+
+  const colDocs = {
+    topCollection: 'Users',
+    userName: 'Jon',
+    entriesCollection: 'Entries',
+  };
+
+  useFirestore(
+    colDocs.topCollection,
+    colDocs.userName,
+    colDocs.entriesCollection,
+    entryIdFS,
+    entryValueFS
+  );
+
+  const { data } = useFirestoreRead(
+    colDocs.topCollection,
+    colDocs.userName,
+    colDocs.entriesCollection
+  );
 
   function setId(idName) {
     let canvases = document.querySelectorAll('canvas');
@@ -20,8 +41,6 @@ function DiaryPage() {
     }
     return id;
   }
-
-  useFirestore('Users', 'Jon', 'Entries', entryIdFS, entryValueFS);
 
   /**
    * This function should only run when the user creates a new diary, and clicks save.
@@ -115,6 +134,6 @@ function DiaryPage() {
       )}
     </>
   );
-}
+};
 
 export default DiaryPage;
