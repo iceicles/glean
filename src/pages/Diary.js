@@ -1,124 +1,76 @@
-import html2canvas from 'html2canvas';
 import { useState } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import useFirestoreRead from '../hooks/useFirestoreRead';
+import { setId } from '../helpers/setId';
+import { ButtonMUI as Button } from '../components/Button';
+import { someImage } from './someimage';
+import { CardMUI as Card } from '../components/Card';
+
+const colDocs = {
+  topCollection: 'Users',
+  userName: 'Jon',
+  entriesCollection: 'Entries',
+};
 
 const DiaryPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [editValue, setEditValue] = useState('');
-  const [canvasClicked, setCanvasClicked] = useState(false);
-  const [canvasClickedId, setCanvasClickedId] = useState('');
-  const [entryIdFS, setEntryIdFS] = useState(setId('Entry'));
-  const [entryValueFS, setEntryValueFS] = useState('');
+  const [editValueArr, setEditValueArr] = useState([]);
+  const [cardClicked, setCardClicked] = useState(false);
+  // const [canvasClickedId, setCanvasClickedId] = useState('');
+  // const [entryIdFS, setEntryIdFS] = useState('No Entry');
+  // const [entryValueFS, setEntryValueFS] = useState('');
+  const [cardVisibility, setCardVisibility] = useState(false);
+  const [newEntry, setNewEntry] = useState(false);
+  const [counter, setCounter] = useState(1);
+  const [saveClicked, setSaveClicked] = useState(false);
+  const [cardIndex, setCardIndex] = useState();
 
-  const colDocs = {
-    topCollection: 'Users',
-    userName: 'Jon',
-    entriesCollection: 'Entries',
-  };
+  // const { data } = useFirestore(
+  //   colDocs.topCollection,
+  //   colDocs.userName,
+  //   colDocs.entriesCollection,
+  //   entryIdFS,
+  //   entryValueFS
+  // );
 
-  useFirestore(
-    colDocs.topCollection,
-    colDocs.userName,
-    colDocs.entriesCollection,
-    entryIdFS,
-    entryValueFS
-  );
+  //const cardDiv = document.querySelector('.cardDiv');
 
-  const { data } = useFirestoreRead(
-    colDocs.topCollection,
-    colDocs.userName,
-    colDocs.entriesCollection
-  );
+  function saveEntry() {
+    if (!editValue) return;
+    setEditMode(false);
+    setCardClicked(false);
+    //setSaveClicked(true);
 
-  function setId(idName) {
-    let canvases = document.querySelectorAll('canvas');
-    let id;
-    for (let i = 0; i < canvases.length; i++) {
-      id = `${idName}-${i}`;
+    if (!cardClicked) {
+      setEditValueArr([...editValueArr, { entry: editValue, id: counter }]);
+      setCounter(counter + 1);
+      //setCardClicked(true);
+    } else {
+      editValueArr[cardIndex].entry = editValue;
     }
-    return id;
   }
 
-  /**
-   * This function should only run when the user creates a new diary, and clicks save.
-   * We only want to take a screenshot once.
-   */
-  function takeScreenshot() {
-    var editor = document.querySelector('.ql-editor');
-
-    html2canvas(editor, {
-      width: 300,
-      height: 200,
-    }).then(function (canvas) {
-      // check if user types in editor else don't do anything (should throw error later)
-      if (!editValue) return;
-
-      // reset state values
-      setCanvasClicked(false);
-      setEditMode(false);
-
-      // we only want to append a new child canvas if an existing canvas was not clicked
-      if (!canvasClicked) {
-        document.body.appendChild(canvas);
-        canvas.setAttribute('id', setId('canv'));
-        setEntryIdFS(setId('Entry'));
-        setEntryValueFS(editValue);
-      } else {
-        // if the newly created entry was clicked (AND TODO: check if canvas text differs (i.e., was edited))
-        // create new snapshot with new entry and replace old canvas
-        let canvasClickedQueried = document.body.querySelector(
-          `canvas[id=${canvasClickedId}]`
-        );
-
-        html2canvas(editor, {
-          width: 300,
-          height: 200,
-        }).then(function (canvas) {
-          // reset state values
-          setCanvasClicked(false);
-          setEditMode(false);
-          // replace with new canvas snapshot
-          canvasClickedQueried.replaceWith(canvas);
-          // set new canvas snapshot to the id of the canvas that was previously clicked
-          canvas.setAttribute('id', `${canvasClickedId}`);
-          setEntryIdFS(setId('Entry'));
-          setEntryValueFS(editValue);
-
-          // then add a new event listener in case of any new edits
-          canvas.addEventListener('click', function () {
-            setEditMode(true);
-            setEditValue(editValue);
-            setCanvasClicked(true);
-
-            // save id of canvas clicked in state
-            const canvasId = canvas.getAttribute('id');
-            setCanvasClickedId(canvasId);
-          });
-        });
-      }
-
-      canvas.addEventListener('click', function () {
-        setEditMode(true);
-        setEditValue(editValue);
-        setCanvasClicked(true);
-
-        // save id of canvas clicked in state
-        const canvasId = canvas.getAttribute('id');
-        setCanvasClickedId(canvasId);
-      });
-    });
+  function onCardClicked(editEntry, index) {
+    setEditMode(true);
+    setCardClicked(true);
+    setCardIndex(index);
+    setEditValue(editEntry.entry);
   }
 
   function toggleEditMode() {
     return setEditMode(!editMode);
   }
 
+  // + button
   function createNewDiary() {
     setEditMode(true);
     setEditValue('');
+    setCardClicked(false);
+    //setCounter(counter + 1);
+    //setNewEntry(true);
+    //setCardVisibility(false);
   }
 
   return (
@@ -126,12 +78,36 @@ const DiaryPage = () => {
       <h1>Recents</h1>
       <p>Diary Page</p>
       <h1>Previous...</h1>
-      <button onClick={toggleEditMode}>Toggle Edit</button>
-      <button onClick={takeScreenshot}>Save</button>
-      <button onClick={createNewDiary}>Create New Diary</button>
+      <Button variant={'contained'} onClick={toggleEditMode}>
+        Toggle Edit
+      </Button>
+      <Button variant={'outlined'} onClick={createNewDiary}>
+        +
+      </Button>
+      <Button variant={'outlined'} onClick={saveEntry}>
+        Save
+      </Button>
       {editMode && (
         <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
       )}
+      <div id='savedEntries'></div>
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        {editValueArr.map((editEntry, index) => (
+          <div
+            key={editEntry.id}
+            id={`cardDiv-${editEntry.id}`}
+            className={'cardDiv'}
+          >
+            <Card
+              id={'card'}
+              variant={'outlined'}
+              width={100}
+              onClick={() => onCardClicked(editEntry, index)}
+              innerHTML={editEntry.entry}
+            ></Card>
+          </div>
+        ))}
+      </div>
     </>
   );
 };
