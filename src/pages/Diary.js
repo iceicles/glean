@@ -19,23 +19,29 @@ const DiaryPage = () => {
   const [editValueArr, setEditValueArr] = useState([]);
   const [cardClicked, setCardClicked] = useState(false);
   // const [canvasClickedId, setCanvasClickedId] = useState('');
-  // const [entryIdFS, setEntryIdFS] = useState('No Entry');
-  // const [entryValueFS, setEntryValueFS] = useState('');
+  const [entryIdFS, setEntryIdFS] = useState('No Entry');
+  const [entryValueFS, setEntryValueFS] = useState('');
   const [cardVisibility, setCardVisibility] = useState(false);
   const [newEntry, setNewEntry] = useState(false);
   const [counter, setCounter] = useState(1);
   const [saveClicked, setSaveClicked] = useState(false);
   const [cardIndex, setCardIndex] = useState();
 
-  // const { data } = useFirestore(
-  //   colDocs.topCollection,
-  //   colDocs.userName,
-  //   colDocs.entriesCollection,
-  //   entryIdFS,
-  //   entryValueFS
-  // );
+  const { data } = useFirestore(
+    colDocs.topCollection,
+    colDocs.userName,
+    colDocs.entriesCollection,
+    entryIdFS,
+    entryValueFS
+  );
+
+  console.log('data - ', data);
 
   //const cardDiv = document.querySelector('.cardDiv');
+
+  //TODO:
+  //- fix save button spawning multiple cards when no edit was made (this can be as part of a duplicate button in the future)
+  // - implement current code with firebase
 
   function saveEntry() {
     if (!editValue) return;
@@ -46,9 +52,14 @@ const DiaryPage = () => {
     if (!cardClicked) {
       setEditValueArr([...editValueArr, { entry: editValue, id: counter }]);
       setCounter(counter + 1);
+      setEntryIdFS(`Entry-${counter}`);
+      setEntryValueFS(editValue);
       //setCardClicked(true);
     } else {
       editValueArr[cardIndex].entry = editValue;
+      //setEntryIdFS(`Entry-${editValueArr[cardIndex]}`);
+      setEntryIdFS(`${data[cardIndex].id}`);
+      setEntryValueFS(editValue);
     }
   }
 
