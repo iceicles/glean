@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { setId } from '../helpers/setId';
 import { ButtonMUI as Button } from '../components/Button';
-import { someImage } from './someimage';
 import { CardMUI as Card } from '../components/Card';
 
 const colDocs = {
@@ -16,52 +14,40 @@ const colDocs = {
 const DiaryPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [editValue, setEditValue] = useState('');
-  const [editValueArr, setEditValueArr] = useState([]);
   const [cardClicked, setCardClicked] = useState(false);
-  // const [canvasClickedId, setCanvasClickedId] = useState('');
   const [entryIdFS, setEntryIdFS] = useState('No Entry');
-  const [entryValueFS, setEntryValueFS] = useState('');
-  const [cardVisibility, setCardVisibility] = useState(false);
-  const [newEntry, setNewEntry] = useState(false);
-  const [counter, setCounter] = useState(1);
-  const [saveClicked, setSaveClicked] = useState(false);
+  const [entryValueFS, setEntryValueFS] = useState(editValue);
   const [cardIndex, setCardIndex] = useState();
+  const [dataLength, setDataLength] = useState();
 
   const { data } = useFirestore(
     colDocs.topCollection,
     colDocs.userName,
     colDocs.entriesCollection,
     entryIdFS,
-    entryValueFS
+    entryValueFS,
+    editValue
   );
-
-  console.log('data - ', data);
-
-  //const cardDiv = document.querySelector('.cardDiv');
-
-  //TODO:
-  //- fix save button spawning multiple cards when no edit was made (this can be as part of a duplicate button in the future)
-  // - implement current code with firebase
 
   function saveEntry() {
     if (!editValue) return;
     setEditMode(false);
     setCardClicked(false);
-    //setSaveClicked(true);
 
     if (!cardClicked) {
-      setEditValueArr([...editValueArr, { entry: editValue, id: counter }]);
-      setCounter(counter + 1);
-      setEntryIdFS(`Entry-${counter}`);
-      setEntryValueFS(editValue);
-      //setCardClicked(true);
+      editMode && setEntryIdFS(`Entry-${dataLength + 1}`);
+      editMode && setEntryValueFS(editValue);
     } else {
-      editValueArr[cardIndex].entry = editValue;
-      //setEntryIdFS(`Entry-${editValueArr[cardIndex]}`);
+      data[cardIndex].entry = editValue;
       setEntryIdFS(`${data[cardIndex].id}`);
       setEntryValueFS(editValue);
     }
   }
+
+  useEffect(() => {
+    let dataLength = data.length - 1;
+    setDataLength(dataLength);
+  }, [data]);
 
   function onCardClicked(editEntry, index) {
     setEditMode(true);
@@ -79,9 +65,6 @@ const DiaryPage = () => {
     setEditMode(true);
     setEditValue('');
     setCardClicked(false);
-    //setCounter(counter + 1);
-    //setNewEntry(true);
-    //setCardVisibility(false);
   }
 
   return (
@@ -103,7 +86,7 @@ const DiaryPage = () => {
       )}
       <div id='savedEntries'></div>
       <div style={{ display: 'flex', flexDirection: 'row' }}>
-        {editValueArr.map((editEntry, index) => (
+        {data.slice(0, -1).map((editEntry, index) => (
           <div
             key={editEntry.id}
             id={`cardDiv-${editEntry.id}`}
