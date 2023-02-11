@@ -9,6 +9,9 @@ function HomePage() {
       <p>
         Go to <Link to='/diary'>the diary page</Link>
       </p>
+      <p>
+        <Link to='/signin'>Sign In</Link>
+      </p>
     </>
   );
 }

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ButtonMUI as Button } from '../components/Button';
-import { CardMUI as Card } from '../components/Card';
+import { Button } from '../components/Button';
+import { Card } from '../components/Card';
+import { Link } from 'react-router-dom';
 
 const colDocs = {
   topCollection: 'Users',
@@ -72,6 +73,7 @@ const DiaryPage = () => {
       <h1>Recents</h1>
       <p>Diary Page</p>
       <h1>Previous...</h1>
+      <Link to='..'>Go Back</Link>
       <Button variant={'contained'} onClick={toggleEditMode}>
         Toggle Edit
       </Button>
