@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Box } from '@mui/material';
 
-export const CardMUI = (props) => {
+const CardMUI = (props) => {
   return (
     <Box
       sx={{
@@ -27,3 +27,5 @@ export const CardMUI = (props) => {
     </Box>
   );
 };
+
+export {CardMUI as Card}
