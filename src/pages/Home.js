@@ -10,7 +10,7 @@ function HomePage() {
         Go to <Link to='/diary'>the diary page</Link>
       </p>
       <p>
-        <Link to='/auth'>Sign In</Link>
+        <Link to='/auth?mode=login'>Sign In</Link>
       </p>
     </>
   );

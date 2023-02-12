@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { TextField, Box } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from './Button';
 
 const AuthFormMUI = () => {
-  const [isSignIn, setIsSignIn] = useState(true);
-
-  const switchAuthHandler = () => {
-    setIsSignIn(!isSignIn);
-  };
+  const [searchParams] = useSearchParams();
+  const isLogIn = searchParams.get('mode') === 'login';
 
   return (
     <>
-      <h1>{isSignIn ? 'Log in' : 'Create account'}</h1>
+      <h1>{isLogIn ? 'Log In' : 'Create Account'}</h1>
       <Box
         component='form'
         sx={{
@@ -35,7 +32,7 @@ const AuthFormMUI = () => {
           autoComplete='current-password'
           variant='standard'
         />
-        {!isSignIn && (
+        {!isLogIn && (
           <TextField
             id='standard-password-input'
             label='Re-Enter Password'
@@ -46,20 +43,20 @@ const AuthFormMUI = () => {
         )}
       </Box>
       <p>
-        {isSignIn ? "Don't have an account yet? " : 'Already have an account? '}
+        {isLogIn ? "Don't have an account yet? " : 'Already have an account? '}
         <Link
+          to={`?mode=${isLogIn ? 'signup' : 'login'}`}
           style={{
             color: 'white',
             textDecoration: 'underline',
             cursor: 'pointer',
           }}
-          onClick={switchAuthHandler}
         >
-          {isSignIn ? 'Create one' : 'Sign In'}
+          {isLogIn ? 'Create one' : 'Sign In'}
         </Link>
       </p>
       <Button variant={'outlined'}>
-        {isSignIn ? 'Login' : 'Create Account'}
+        {isLogIn ? 'Login' : 'Create Account'}
       </Button>
     </>
   );
