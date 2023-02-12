@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TextField, Box } from '@mui/material';
+import { Link } from 'react-router-dom';
 
-const FormMUI = (prop) => {
+const AuthFormMUI = (prop) => {
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  const switchAuthHandler = () => {
+    setIsSignUp(!isSignUp);
+  };
 
   return (
     <>
+      <h1>
+        {isSignUp ? 'Awesome features await' : 'Sign in to access your library'}
+      </h1>
       <Box
         component='form'
         sx={{
@@ -27,7 +36,7 @@ const FormMUI = (prop) => {
           autoComplete='current-password'
           variant='standard'
         />
-        {prop.showReEnterPassword && (
+        {isSignUp && (
           <TextField
             id='standard-password-input'
             label='Re-Enter Password'
@@ -36,9 +45,22 @@ const FormMUI = (prop) => {
             variant='standard'
           />
         )}
+        <p>
+          {isSignUp ? 'Have an account? ' : "Don't have an account yet? "}
+          <Link
+            style={{
+              color: 'white',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+            onClick={switchAuthHandler}
+          >
+            {isSignUp ? 'Sign In' : 'Sign Up'}
+          </Link>
+        </p>
       </Box>
     </>
   );
 };
 
-export { FormMUI as Form };
+export { AuthFormMUI as AuthForm };
