@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { TextField, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { Button } from './Button';
 
-const AuthFormMUI = (prop) => {
-  const [isSignUp, setIsSignUp] = useState(false);
+const AuthFormMUI = () => {
+  const [isSignIn, setIsSignIn] = useState(true);
 
   const switchAuthHandler = () => {
-    setIsSignUp(!isSignUp);
+    setIsSignIn(!isSignIn);
   };
 
   return (
     <>
-      <h1>
-        {isSignUp ? 'Awesome features await' : 'Sign in to access your library'}
-      </h1>
+      <h1>{isSignIn ? 'Log in' : 'Create account'}</h1>
       <Box
         component='form'
         sx={{
@@ -36,7 +35,7 @@ const AuthFormMUI = (prop) => {
           autoComplete='current-password'
           variant='standard'
         />
-        {isSignUp && (
+        {!isSignIn && (
           <TextField
             id='standard-password-input'
             label='Re-Enter Password'
@@ -45,20 +44,23 @@ const AuthFormMUI = (prop) => {
             variant='standard'
           />
         )}
-        <p>
-          {isSignUp ? 'Have an account? ' : "Don't have an account yet? "}
-          <Link
-            style={{
-              color: 'white',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-            }}
-            onClick={switchAuthHandler}
-          >
-            {isSignUp ? 'Sign In' : 'Sign Up'}
-          </Link>
-        </p>
       </Box>
+      <p>
+        {isSignIn ? "Don't have an account yet? " : 'Already have an account? '}
+        <Link
+          style={{
+            color: 'white',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+          }}
+          onClick={switchAuthHandler}
+        >
+          {isSignIn ? 'Create one' : 'Sign In'}
+        </Link>
+      </p>
+      <Button variant={'outlined'}>
+        {isSignIn ? 'Login' : 'Create Account'}
+      </Button>
     </>
   );
 };
