@@ -36,25 +36,20 @@ const AuthFormMUI = (props) => {
             )}
           />
         )}
-
         <Controller
           control={props.control}
           name='email'
           render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <>
-              <TextField
-                type='email'
-                label='Email'
-                variant='standard'
-                helperText={error ? error.message : null}
-                value={value}
-                onChange={onChange}
-              />
-              {console.log('value - ', value)}
-            </>
+            <TextField
+              type='email'
+              label='Email'
+              variant='standard'
+              helperText={error ? error.message : null}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
-
         <Controller
           control={props.control}
           name='password'
@@ -69,11 +64,10 @@ const AuthFormMUI = (props) => {
             />
           )}
         />
-
         {!props.isLogIn && (
           <Controller
             control={props.control}
-            name='reEnterPassword'
+            name='passwordConfirm'
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <TextField
                 type='password'
