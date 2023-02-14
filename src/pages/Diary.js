@@ -36,8 +36,10 @@ const DiaryPage = () => {
     setCardClicked(false);
 
     if (!cardClicked) {
-      editMode && setEntryIdFS(`Entry-${dataLength + 1}`);
-      editMode && setEntryValueFS(editValue);
+      if (editMode) {
+        setEntryIdFS(`Entry-${dataLength + 1}`);
+        setEntryValueFS(editValue);
+      }
     } else {
       data[cardIndex].entry = editValue;
       setEntryIdFS(`${data[cardIndex].id}`);
