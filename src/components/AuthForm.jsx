@@ -1,63 +1,107 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TextField, Box } from '@mui/material';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Button } from './Button';
+import { Link } from 'react-router-dom';
+import { Controller } from 'react-hook-form';
 
-const AuthFormMUI = () => {
-  const [searchParams] = useSearchParams();
-  const isLogIn = searchParams.get('mode') === 'login';
-
+const AuthFormMUI = (props) => {
   return (
     <>
-      <h1>{isLogIn ? 'Log In' : 'Create Account'}</h1>
+      <h1>{props.isLogIn ? 'Log In' : 'Sign Up'}</h1>
       <Box
         component='form'
         sx={{
-          '& .MuiTextField-root': { margin: '1rem', width: '50rem' },
+          '& .MuiTextField-root': {
+            margin: '1rem',
+            width: '20rem',
+            display: 'flex',
+            flexDirection: 'column',
+          },
         }}
         noValidate
         autoComplete='off'
       >
-        <TextField
-          id='standard-email-input'
-          label='Email'
-          type='email'
-          autoComplete='current-email'
-          variant='standard'
+        {!props.isLogIn && (
+          <Controller
+            control={props.control}
+            name='username'
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                type='username'
+                label='Username'
+                variant='standard'
+                helperText={error ? error.message : null}
+                value={value}
+                onChange={onChange}
+              />
+            )}
+          />
+        )}
+
+        <Controller
+          control={props.control}
+          name='email'
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <>
+              <TextField
+                type='email'
+                label='Email'
+                variant='standard'
+                helperText={error ? error.message : null}
+                value={value}
+                onChange={onChange}
+              />
+              {console.log('value - ', value)}
+            </>
+          )}
         />
-        <TextField
-          id='standard-password-input'
-          label='Password'
-          type='password'
-          autoComplete='current-password'
-          variant='standard'
+
+        <Controller
+          control={props.control}
+          name='password'
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <TextField
+              type='password'
+              label='Password'
+              variant='standard'
+              helperText={error ? error.message : null}
+              value={value}
+              onChange={onChange}
+            />
+          )}
         />
-        {!isLogIn && (
-          <TextField
-            id='standard-password-input'
-            label='Re-Enter Password'
-            type='password'
-            autoComplete='current-password'
-            variant='standard'
+
+        {!props.isLogIn && (
+          <Controller
+            control={props.control}
+            name='reEnterPassword'
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                type='password'
+                label='Re-Enter Password'
+                variant='standard'
+                helperText={error ? error.message : null}
+                value={value}
+                onChange={onChange}
+              />
+            )}
           />
         )}
       </Box>
       <p>
-        {isLogIn ? "Don't have an account yet? " : 'Already have an account? '}
+        {props.isLogIn
+          ? "Don't have an account yet? "
+          : 'Already have an account? '}
         <Link
-          to={`?mode=${isLogIn ? 'signup' : 'login'}`}
+          to={`?mode=${props.isLogIn ? 'signup' : 'login'}`}
           style={{
             color: 'white',
             textDecoration: 'underline',
             cursor: 'pointer',
           }}
         >
-          {isLogIn ? 'Create one' : 'Sign In'}
+          {props.isLogIn ? 'Create one' : 'Sign In'}
         </Link>
       </p>
-      <Button variant={'outlined'}>
-        {isLogIn ? 'Login' : 'Create Account'}
-      </Button>
     </>
   );
 };
