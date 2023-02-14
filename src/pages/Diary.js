@@ -4,7 +4,8 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/contexts/AuthContext';
 
 const colDocs = {
   topCollection: 'Users',
@@ -20,6 +21,11 @@ const DiaryPage = () => {
   const [entryValueFS, setEntryValueFS] = useState(editValue);
   const [cardIndex, setCardIndex] = useState();
   const [dataLength, setDataLength] = useState();
+  const [error, setError] = useState();
+
+  const { currentUser, logout } = useAuth();
+
+  const navigate = useNavigate();
 
   const { data } = useFirestore(
     colDocs.topCollection,
@@ -29,6 +35,17 @@ const DiaryPage = () => {
     entryValueFS,
     editValue
   );
+
+  //TODO: need to fix logout - null errors in console
+  const handleLogout = async () => {
+    setError('');
+    try {
+      await logout();
+      navigate('/');
+    } catch {
+      setError('Failed to log out');
+    }
+  };
 
   function saveEntry() {
     if (!editValue) return;
@@ -72,9 +89,13 @@ const DiaryPage = () => {
 
   return (
     <>
+      {error && <h1 style={{ color: 'red' }}>{error}</h1>}
       <h1>Recents</h1>
       <p>Diary Page</p>
       <h1>Previous...</h1>
+      <h2>
+        Email: <i>{currentUser.email}</i>
+      </h2>
       <Link to='..'>Go Back</Link>
       <Button variant={'contained'} onClick={toggleEditMode}>
         Toggle Edit
@@ -84,6 +105,9 @@ const DiaryPage = () => {
       </Button>
       <Button variant={'outlined'} onClick={saveEntry}>
         Save
+      </Button>
+      <Button variant={'contained'} onClick={handleLogout}>
+        Log Out
       </Button>
       {editMode && (
         <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
