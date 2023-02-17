@@ -1,46 +1,33 @@
 import React from 'react';
-import { TextField, Box } from '@mui/material';
+import { TextField } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { Controller } from 'react-hook-form';
+import styled from '@emotion/styled';
+import { Button } from './Button';
+
+const Main = styled('div')({
+  height: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '2rem',
+});
+
+const FormTextField = styled(TextField)({
+  width: '20rem',
+});
 
 const AuthFormMUI = (props) => {
   return (
     <>
-      <h1>{props.isLogIn ? 'Log In' : 'Sign Up'}</h1>
-      <Box
-        component='form'
-        sx={{
-          '& .MuiTextField-root': {
-            margin: '1rem',
-            width: '20rem',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
-        noValidate
-        autoComplete='off'
-      >
-        {!props.isLogIn && (
-          <Controller
-            control={props.control}
-            name='username'
-            render={({ field: { onChange, value }, fieldState: { error } }) => (
-              <TextField
-                type='username'
-                label='Username'
-                variant='standard'
-                helperText={error ? error.message : null}
-                value={value}
-                onChange={onChange}
-              />
-            )}
-          />
-        )}
+      <Main>
+        <h1>{props.isLogIn ? 'Log In' : 'Sign Up'}</h1>
         <Controller
           control={props.control}
           name='email'
           render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <TextField
+            <FormTextField
               type='email'
               label='Email'
               variant='standard'
@@ -54,7 +41,7 @@ const AuthFormMUI = (props) => {
           control={props.control}
           name='password'
           render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <TextField
+            <FormTextField
               type='password'
               label='Password'
               variant='standard'
@@ -69,7 +56,7 @@ const AuthFormMUI = (props) => {
             control={props.control}
             name='passwordConfirm'
             render={({ field: { onChange, value }, fieldState: { error } }) => (
-              <TextField
+              <FormTextField
                 type='password'
                 label='Re-Enter Password'
                 variant='standard'
@@ -80,22 +67,29 @@ const AuthFormMUI = (props) => {
             )}
           />
         )}
-      </Box>
-      <p>
-        {props.isLogIn
-          ? "Don't have an account yet? "
-          : 'Already have an account? '}
-        <Link
-          to={`?mode=${props.isLogIn ? 'signup' : 'login'}`}
-          style={{
-            color: 'white',
-            textDecoration: 'underline',
-            cursor: 'pointer',
-          }}
+        <p>
+          {props.isLogIn
+            ? "Don't have an account yet? "
+            : 'Already have an account? '}
+          <Link
+            to={`?mode=${props.isLogIn ? 'signup' : 'login'}`}
+            style={{
+              color: 'white',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            {props.isLogIn ? 'Create one' : 'Sign In'}
+          </Link>
+        </p>
+        <Button
+          disabled={props.loading}
+          onClick={props.onSubmit}
+          variant={'contained'}
         >
-          {props.isLogIn ? 'Create one' : 'Sign In'}
-        </Link>
-      </p>
+          {props.isLogIn ? 'Login' : 'Create Account'}
+        </Button>
+      </Main>
     </>
   );
 };
