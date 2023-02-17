@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { AuthForm } from '../components/AuthForm';
-import { Button } from '../components/Button';
-import { useAuth } from '../components/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const AuthenticationPage = () => {
   const [error, setError] = useState('');
@@ -25,9 +24,6 @@ const AuthenticationPage = () => {
   const { signup, login } = useAuth();
 
   const onSubmit = async (data) => {
-    console.log(data.email);
-    console.log(data.password);
-
     if (!isLogIn && data.password !== data.passwordConfirm) {
       return setError('Passwords do not match');
     }
@@ -40,7 +36,7 @@ const AuthenticationPage = () => {
         navigate('/diary');
       } else {
         await signup(data.email, data.password);
-        navigate('/diary');
+        navigate('/auth?mode=login');
       }
     } catch {
       if (isLogIn) {
@@ -54,23 +50,13 @@ const AuthenticationPage = () => {
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        {error && <h1 style={{ color: 'red' }}>{error}</h1>}
-        <AuthForm control={control} isLogIn={isLogIn} />
-        <Button
-          disabled={loading}
-          onClick={handleSubmit(onSubmit)}
-          variant={'contained'}
-        >
-          {isLogIn ? 'Login' : 'Create Account'}
-        </Button>
-      </div>
+      {error && <h1 style={{ color: 'red' }}>{error}</h1>}
+      <AuthForm
+        control={control}
+        isLogIn={isLogIn}
+        onSubmit={handleSubmit(onSubmit)}
+        loading={loading}
+      />
     </>
   );
 };
