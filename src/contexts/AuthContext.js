@@ -7,26 +7,26 @@ import {
 } from 'firebase/auth';
 
 const AuthContext = React.createContext();
-export function useAuth() {
+export const useAuth = () => {
   return useContext(AuthContext);
-}
-export function AuthProvider({ children }) {
+};
+export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
 
   const auth = getAuth();
 
-  function signup(email, password) {
+  const signup = (email, password) => {
     return createUserWithEmailAndPassword(auth, email, password);
-  }
+  };
 
-  function login(email, password) {
+  const login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
-  }
+  };
 
-  function logout() {
+  const logout = () => {
     return signOut(auth);
-  }
+  };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -50,4 +50,4 @@ export function AuthProvider({ children }) {
       {!loading && children}
     </AuthContext.Provider>
   );
-}
+};
