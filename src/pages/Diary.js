@@ -1,17 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import styled from '@emotion/styled';
 
-const colDocs = {
-  topCollection: 'Users',
-  userName: 'Jon',
-  entriesCollection: 'Entries',
-};
+const Header = styled('header')({
+  display: 'flex',
+  justifyContent: 'space-between',
+  margin: '0.9rem',
+});
+
+const LogOutBtn = styled(Button)({
+  borderRadius: '0.25rem',
+  padding: '0.9rem',
+  width: 'fit-content',
+  textDecoration: 'none',
+  backgroundColor: 'green',
+  cursor: 'pointer', // needs to be added as common style for links and buttons
+});
+
+const NewEntryBtn = styled('button')({
+  display: 'block',
+  height: '18.75rem',
+  width: '18.75rem',
+  backgroundColor: 'lightgreen',
+  borderRadius: '50%',
+  fontSize: '12.5rem',
+  cursor: 'pointer',
+});
+
+const NewEntryDiv = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '0.5rem',
+});
 
 const DiaryPage = () => {
   const [editMode, setEditMode] = useState(false);
@@ -23,9 +50,23 @@ const DiaryPage = () => {
   const [dataLength, setDataLength] = useState();
   const [error, setError] = useState();
 
+  const navigate = useNavigate();
+
   const { currentUser, logout } = useAuth();
 
-  const navigate = useNavigate();
+  const getUserName = useCallback(() => {
+    const indexOfAt = currentUser.email.split('').indexOf('@');
+    const userName = currentUser.email.slice(0, indexOfAt);
+    return userName;
+  }, [currentUser]);
+
+  //TODO: fix email property of null err being thrown in console
+
+  const colDocs = {
+    topCollection: 'Users',
+    userName: currentUser.email,
+    entriesCollection: 'Entries',
+  };
 
   const { data } = useFirestore(
     colDocs.topCollection,
@@ -76,9 +117,9 @@ const DiaryPage = () => {
     setEditValue(editEntry.entry);
   }
 
-  function toggleEditMode() {
-    return setEditMode(!editMode);
-  }
+  // function toggleEditMode() {
+  //   return setEditMode(!editMode);
+  // }
 
   // + button
   function createNewDiary() {
@@ -89,46 +130,51 @@ const DiaryPage = () => {
 
   return (
     <>
+      <Header>
+        <h2>
+          {'Hello, '} <i>{currentUser && getUserName()}</i>
+          <span> 🙂</span>
+        </h2>
+        <LogOutBtn variant={'outlined'} onClick={handleLogout}>
+          Log Out
+        </LogOutBtn>
+      </Header>
       {error && <h1 style={{ color: 'red' }}>{error}</h1>}
       <h1>Recents</h1>
-      <p>Diary Page</p>
-      <h1>Previous...</h1>
-      <h2>
-        Email: <i>{currentUser.email}</i>
-      </h2>
-      <Link to='..'>Go Back</Link>
-      <Button variant={'contained'} onClick={toggleEditMode}>
+      <NewEntryDiv>
+        <i>Create a new entry...</i>
+        <NewEntryBtn onClick={createNewDiary}> + </NewEntryBtn>
+      </NewEntryDiv>
+      <h1>Previous</h1>
+      {/* <Button variant={'contained'} onClick={toggleEditMode}>
         Toggle Edit
-      </Button>
-      <Button variant={'outlined'} onClick={createNewDiary}>
-        +
-      </Button>
-      <Button variant={'outlined'} onClick={saveEntry}>
-        Save
-      </Button>
-      <Button variant={'contained'} onClick={handleLogout}>
-        Log Out
-      </Button>
+      </Button> */}
       {editMode && (
         <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
       )}
+      {editMode && (
+        <Button variant={'outlined'} onClick={saveEntry}>
+          Save
+        </Button>
+      )}
       <div id='savedEntries'></div>
       <div style={{ display: 'flex', flexDirection: 'row' }}>
-        {data.slice(0, -1).map((editEntry, index) => (
-          <div
-            key={editEntry.id}
-            id={`cardDiv-${editEntry.id}`}
-            className={'cardDiv'}
-          >
-            <Card
-              id={'card'}
-              variant={'outlined'}
-              width={100}
-              onClick={() => onCardClicked(editEntry, index)}
-              innerHTML={editEntry.entry}
-            ></Card>
-          </div>
-        ))}
+        {data &&
+          data.slice(0, -1).map((editEntry, index) => (
+            <div
+              key={editEntry.id}
+              id={`cardDiv-${editEntry.id}`}
+              className={'cardDiv'}
+            >
+              <Card
+                id={'card'}
+                variant={'outlined'}
+                width={100}
+                onClick={() => onCardClicked(editEntry, index)}
+                innerHTML={editEntry.entry}
+              ></Card>
+            </div>
+          ))}
       </div>
     </>
   );
