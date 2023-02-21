@@ -7,6 +7,12 @@ import { Card } from '../components/Card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styled from '@emotion/styled';
+import EntryContainer from '../components/EntryContainer';
+
+const Main = styled('main')({
+  marginTop: '15vh',
+  marginBottom: '13vh',
+});
 
 const Header = styled('header')({
   display: 'flex',
@@ -21,6 +27,15 @@ const LogOutBtn = styled(Button)({
   textDecoration: 'none',
   backgroundColor: 'green',
   cursor: 'pointer', // needs to be added as common style for links and buttons
+});
+
+const Container = styled('div')({
+  height: '100vh',
+  display: 'flex',
+  //alignItems: 'center',
+  justifyContent: 'center',
+  borderRight: '1px solid blue',
+  borderLeft: '1px solid blue',
 });
 
 const NewEntryBtn = styled('button')({
@@ -49,6 +64,7 @@ const DiaryPage = () => {
   const [cardIndex, setCardIndex] = useState();
   const [dataLength, setDataLength] = useState();
   const [error, setError] = useState();
+  const [showButtons, setShowButtons] = useState(false);
 
   const navigate = useNavigate();
 
@@ -92,6 +108,7 @@ const DiaryPage = () => {
     if (!editValue) return;
     setEditMode(false);
     setCardClicked(false);
+    setShowButtons(false);
 
     if (!cardClicked) {
       if (editMode) {
@@ -111,10 +128,16 @@ const DiaryPage = () => {
   }, [data]);
 
   function onCardClicked(editEntry, index) {
-    setEditMode(true);
+    //setEditMode(true);
     setCardClicked(true);
     setCardIndex(index);
     setEditValue(editEntry.entry);
+    setShowButtons(true);
+  }
+
+  function onEditClicked() {
+    setEditMode(true);
+    setShowButtons(false);
   }
 
   // function toggleEditMode() {
@@ -126,6 +149,11 @@ const DiaryPage = () => {
     setEditMode(true);
     setEditValue('');
     setCardClicked(false);
+  }
+
+  function onCancel() {
+    // TODO: rename state name
+    setShowButtons(false);
   }
 
   return (
@@ -140,42 +168,58 @@ const DiaryPage = () => {
         </LogOutBtn>
       </Header>
       {error && <h1 style={{ color: 'red' }}>{error}</h1>}
-      <h1>Recents</h1>
-      <NewEntryDiv>
-        <i>Create a new entry...</i>
-        <NewEntryBtn onClick={createNewDiary}> + </NewEntryBtn>
-      </NewEntryDiv>
-      <h1>Previous</h1>
-      {/* <Button variant={'contained'} onClick={toggleEditMode}>
+      <Main>
+        <NewEntryDiv>
+          <i>Create a new entry...</i>
+          <Button onClick={createNewDiary}> + </Button>
+        </NewEntryDiv>
+        {/* <Button variant={'contained'} onClick={toggleEditMode}>
         Toggle Edit
       </Button> */}
-      {editMode && (
-        <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
-      )}
-      {editMode && (
-        <Button variant={'outlined'} onClick={saveEntry}>
-          Save
-        </Button>
-      )}
-      <div id='savedEntries'></div>
-      <div style={{ display: 'flex', flexDirection: 'row' }}>
-        {data &&
-          data.slice(0, -1).map((editEntry, index) => (
-            <div
-              key={editEntry.id}
-              id={`cardDiv-${editEntry.id}`}
-              className={'cardDiv'}
-            >
-              <Card
-                id={'card'}
-                variant={'outlined'}
-                width={100}
-                onClick={() => onCardClicked(editEntry, index)}
-                innerHTML={editEntry.entry}
-              ></Card>
-            </div>
-          ))}
-      </div>
+        {editMode && (
+          <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
+        )}
+        {editMode && (
+          <Button variant={'outlined'} onClick={saveEntry}>
+            Save
+          </Button>
+        )}
+        {/* <div style={{ display: 'flex', flexDirection: 'row' }}> */}
+
+        <EntryContainer>
+          {data &&
+            data.slice(0, -1).map((editEntry, index) => (
+              <div
+                key={index}
+                style={{ display: 'flex', flexDirection: 'column' }}
+              >
+                {showButtons && cardIndex === index && (
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button>Favorite</Button>
+                    <Button onClick={onEditClicked}>Edit</Button>
+                    <Button>Delete</Button>
+                    <Button onClick={onCancel}>Cancel</Button>
+                  </div>
+                )}
+                <Card
+                  key={index}
+                  id={`cardDiv-${index}`}
+                  alt={'a card entry'}
+                  variant={'outlined'}
+                  style={{
+                    border:
+                      cardClicked && cardIndex === index
+                        ? '0.188rem solid green'
+                        : '',
+                  }}
+                  onClick={() => onCardClicked(editEntry, index)}
+                  innerHTML={editEntry.entry}
+                />
+              </div>
+            ))}
+        </EntryContainer>
+        {/* </div> */}
+      </Main>
     </>
   );
 };
