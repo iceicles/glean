@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -65,6 +65,9 @@ const DiaryPage = () => {
   const [dataLength, setDataLength] = useState();
   const [error, setError] = useState();
   const [showButtons, setShowButtons] = useState(false);
+  const [enableSaveBtn, setEnableSaveBtn] = useState(false); //TODO: disable button when setEnableSaveBtn is false
+  const [saveBtnClicked, setSaveBtnClicked] = useState(false);
+  const [newEntryBtnClicked, setNewEntryBtnClicked] = useState(false);
 
   const navigate = useNavigate();
 
@@ -104,24 +107,57 @@ const DiaryPage = () => {
     }
   };
 
-  function saveEntry() {
+  const newDataRef = useRef(0);
+
+  // user can only save if the editValue has changed
+  // i.e., it can be the same content - either more added or removed
+  useEffect(() => {
+    setEnableSaveBtn(true);
+    //console.log('does this run?');
+  }, [editValue]);
+
+  function handleSaveEntry() {
     if (!editValue) return;
-    setEditMode(false);
+    //setEditMode(false);
     setCardClicked(false);
     setShowButtons(false);
+    setSaveBtnClicked(true);
 
-    if (!cardClicked) {
-      if (editMode) {
+    //!!editValue && setSaveClicked(prev => prev.editValue != editValue ? true : false);
+    console.log('[saveEntry()] enableSaveBtn - ', enableSaveBtn);
+
+    if (enableSaveBtn) {
+      console.log('in enableSaveBtn if block');
+      (newDataRef.current === 0 || newEntryBtnClicked) &&
         setEntryIdFS(`Entry-${dataLength + 1}`);
-        setEntryValueFS(editValue);
-      }
-    } else {
+      newDataRef.current = 1;
+      setEntryValueFS(editValue);
+      setNewEntryBtnClicked(false);
+      setEnableSaveBtn(false);
+      //console.log('newDataRef.current ->> ', newDataRef.current);
+    } //else if (enableSaveBtn && newEntryClicked) {
+    // if
+    else {
+      console.log('you need to edit your entry before clicking save again');
+    }
+    //setSaveClicked(true);
+    if (cardClicked && enableSaveBtn) {
+      console.log('in cardClicked && enableSaveBtn if block');
       data[cardIndex].entry = editValue;
       setEntryIdFS(`${data[cardIndex].id}`);
       setEntryValueFS(editValue);
+      setEnableSaveBtn(false);
+      // if (editMode) {
+      // }
+      // } else {
+      //   // if the + button was clicked i.e., the user is creating a new entry
+      //   data[cardIndex].entry = editValue;
+      //   setEntryIdFS(`${data[cardIndex].id}`);
+      //   setEntryValueFS(editValue);
     }
   }
 
+  // useEffect to capture data length excluding the initial entry (i.e., '')
   useEffect(() => {
     let dataLength = data.length - 1;
     setDataLength(dataLength);
@@ -133,10 +169,14 @@ const DiaryPage = () => {
     setCardIndex(index);
     setEditValue(editEntry.entry);
     setShowButtons(true);
+    setEnableSaveBtn(false);
+    console.log('card clicked enable save btn - ', enableSaveBtn);
+    // console.log('editValue - ', editValue);
+    // console.log('editEntry.entry - ', editEntry.entry);
   }
 
   function onEditClicked() {
-    setEditMode(true);
+    //setEditMode(true);
     setShowButtons(false);
   }
 
@@ -144,11 +184,14 @@ const DiaryPage = () => {
   //   return setEditMode(!editMode);
   // }
 
-  // + button
-  function createNewDiary() {
-    setEditMode(true);
+  // New button
+  function handleCreateNewDiary() {
+    //setEditMode(true);
+    newDataRef.current = 0;
     setEditValue('');
     setCardClicked(false);
+    setSaveBtnClicked(false);
+    setNewEntryBtnClicked(true);
   }
 
   function onCancel() {
@@ -171,52 +214,69 @@ const DiaryPage = () => {
       <Main>
         <NewEntryDiv>
           <i>Create a new entry...</i>
-          <Button onClick={createNewDiary}> + </Button>
+          <Button onClick={handleCreateNewDiary}>New</Button>
         </NewEntryDiv>
         {/* <Button variant={'contained'} onClick={toggleEditMode}>
         Toggle Edit
       </Button> */}
-        {editMode && (
-          <ReactQuill theme='snow' value={editValue} onChange={setEditValue} />
-        )}
-        {editMode && (
-          <Button variant={'outlined'} onClick={saveEntry}>
-            Save
-          </Button>
-        )}
+
         {/* <div style={{ display: 'flex', flexDirection: 'row' }}> */}
 
         <EntryContainer>
-          {data &&
-            data.slice(0, -1).map((editEntry, index) => (
-              <div
-                key={index}
-                style={{ display: 'flex', flexDirection: 'column' }}
-              >
-                {showButtons && cardIndex === index && (
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <Button>Favorite</Button>
-                    <Button onClick={onEditClicked}>Edit</Button>
-                    <Button>Delete</Button>
-                    <Button onClick={onCancel}>Cancel</Button>
-                  </div>
-                )}
-                <Card
-                  key={index}
-                  id={`cardDiv-${index}`}
-                  alt={'a card entry'}
-                  variant={'outlined'}
-                  style={{
-                    border:
-                      cardClicked && cardIndex === index
-                        ? '0.188rem solid green'
-                        : '',
-                  }}
-                  onClick={() => onCardClicked(editEntry, index)}
-                  innerHTML={editEntry.entry}
-                />
-              </div>
-            ))}
+          <article>
+            <ReactQuill
+              theme='snow'
+              value={editValue}
+              onChange={setEditValue}
+            />
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button onClick={handleSaveEntry} disabled={!enableSaveBtn}>
+                Save
+              </Button>
+
+              <Button disabled={!saveBtnClicked}>Favorite</Button>
+              {/* <Button onClick={onEditClicked}>Edit</Button> */}
+              <Button disabled={!saveBtnClicked}>Delete</Button>
+              {/* <Button onClick={handleCreateNewDiary}>New</Button> */}
+            </div>
+          </article>
+          <article
+            style={{
+              display: 'flex',
+              flexFlow: 'row wrap',
+              width: '100%',
+              maxWidth: '60vh',
+              gap: '5px',
+            }}
+          >
+            {data &&
+              data.slice(0, -1).map((editEntry, index) => (
+                <React.Fragment key={index}>
+                  {/* {showButtons && cardIndex === index && (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Button>Favorite</Button>
+                      <Button onClick={onEditClicked}>Edit</Button>
+                      <Button>Delete</Button>
+                      <Button onClick={onCancel}>Cancel</Button>
+                    </div>
+                  )} */}
+                  <Card
+                    key={index}
+                    id={`cardDiv-${index}`}
+                    alt={'a card entry'}
+                    variant={'outlined'}
+                    style={{
+                      border:
+                        cardClicked && cardIndex === index
+                          ? '0.188rem solid green'
+                          : '',
+                    }}
+                    onClick={() => onCardClicked(editEntry, index)}
+                    innerHTML={editEntry.entry}
+                  />
+                </React.Fragment>
+              ))}
+          </article>
         </EntryContainer>
         {/* </div> */}
       </Main>
