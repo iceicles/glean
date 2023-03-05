@@ -9,52 +9,6 @@ import EntryContainer from '../components/EntryContainer';
 import TextEditor from '../components/TextEditor';
 import DOMPurify from 'dompurify';
 
-const Section = styled('section')({
-  marginTop: '15vh',
-  marginBottom: '13vh',
-});
-
-const Header = styled('header')({
-  display: 'flex',
-  justifyContent: 'space-between',
-  margin: '0.9rem',
-});
-
-const LogOutBtn = styled(Button)({
-  borderRadius: '0.25rem',
-  padding: '0.9rem',
-  width: 'fit-content',
-  textDecoration: 'none',
-  backgroundColor: 'green',
-  cursor: 'pointer', // needs to be added as common style for links and buttons
-});
-
-const Container = styled('div')({
-  height: '100vh',
-  display: 'flex',
-  //alignItems: 'center',
-  justifyContent: 'center',
-  borderRight: '1px solid blue',
-  borderLeft: '1px solid blue',
-});
-
-const NewEntryBtn = styled('button')({
-  display: 'block',
-  height: '18.75rem',
-  width: '18.75rem',
-  backgroundColor: 'lightgreen',
-  borderRadius: '50%',
-  fontSize: '12.5rem',
-  cursor: 'pointer',
-});
-
-const NewEntryDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: '0.5rem',
-});
-
 const DiaryPage = () => {
   const [editorValue, setEditorValue] = useState('');
   const [cardClicked, setCardClicked] = useState(false);
@@ -147,7 +101,7 @@ const DiaryPage = () => {
   }, [editorValue]);
 
   /* handles save click */
-  function handleSaveEntry() {
+  const handleSaveEntry = () => {
     if (!editorValue) return;
 
     if (!cardClicked && userCanSave) {
@@ -169,18 +123,18 @@ const DiaryPage = () => {
     } else {
       setSaveError('You need to edit your entry before clicking save again.');
     }
-  }
+  };
 
   /* handles card click*/
-  function handleCardClicked(editEntry, index) {
+  const handleCardClicked = (editEntry, index) => {
     setCardClicked(true);
     setCardIndex(index);
     setEditorValue(editEntry.entry);
     setDisableSaveBtn(true);
-  }
+  };
 
   /* handles new button click */
-  function handleCreateNewEntry() {
+  const handleCreateNewEntry = () => {
     // resets newEntryRef to 0 to allow for additional entry ids
     newEntryRef.current = 0;
     setEditorValue('');
@@ -188,7 +142,7 @@ const DiaryPage = () => {
     setDisableFavBtn(true);
     setDisableDelBtn(true);
     setNewEntryBtnClicked(true);
-  }
+  };
 
   return (
     <>
@@ -208,51 +162,48 @@ const DiaryPage = () => {
           <Button onClick={handleCreateNewEntry}>New</Button>
         </NewEntryDiv>
         <EntryContainer>
-          <article>
-            <TextEditor
-              theme='snow'
-              placeholder='Let your imagination flow...'
-              value={editorValue}
-              onChange={setEditorValue}
-            />
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Button onClick={handleSaveEntry} disabled={disableSaveBtn}>
-                Save
-              </Button>
-              <Button disabled={disableFavBtn}>Favorite</Button>
-              <Button disabled={disableDelBtn}>Delete</Button>
-            </div>
-            <p>{saveError}</p>
-          </article>
-          <article
-            style={{
-              display: 'flex',
-              flexFlow: 'row wrap',
-              width: '100%',
-              maxWidth: '60vh',
-              gap: '5px',
-            }}
-          >
-            {data &&
-              data.slice(0, -1).map((editEntry, index) => (
-                <React.Fragment key={index}>
-                  <Card
-                    key={index}
-                    id={`cardDiv-${index}`}
-                    alt={'a card entry'}
-                    variant={'outlined'}
-                    style={{
-                      border:
-                        cardClicked && cardIndex === index
-                          ? '0.188rem solid green'
-                          : '',
-                    }}
-                    onClick={() => handleCardClicked(editEntry, index)}
-                    innerHTML={DOMPurify.sanitize(editEntry.entry)}
-                  />
-                </React.Fragment>
-              ))}
-          </article>
+          <EditorAndCardRow id='row'>
+            <TextEditorArticle>
+              <TextEditor
+                theme='snow'
+                placeholder='Let your imagination flow...'
+                value={editorValue}
+                onChange={setEditorValue}
+              />
+              {/* </article> */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <Button onClick={handleSaveEntry} disabled={disableSaveBtn}>
+                  Save
+                </Button>
+                <Button disabled={disableFavBtn}>Favorite</Button>
+                <Button disabled={disableDelBtn}>Delete</Button>
+              </div>
+              <p>{saveError}</p>
+            </TextEditorArticle>
+            <CardArticleContainer>
+              <CardArticleRow>
+                {data &&
+                  data.slice(0, -1).map((editEntry, index) => (
+                    <React.Fragment key={index}>
+                      <Card
+                        key={index}
+                        id={`cardDiv-${index}`}
+                        alt={'a card entry'}
+                        variant={'outlined'}
+                        style={{
+                          border:
+                            cardClicked && cardIndex === index
+                              ? '0.188rem solid green'
+                              : '',
+                        }}
+                        onClick={() => handleCardClicked(editEntry, index)}
+                        innerHTML={DOMPurify.sanitize(editEntry.entry)}
+                      />
+                    </React.Fragment>
+                  ))}
+              </CardArticleRow>
+            </CardArticleContainer>
+          </EditorAndCardRow>
         </EntryContainer>
         {/* </div> */}
       </Section>
@@ -261,3 +212,85 @@ const DiaryPage = () => {
 };
 
 export default DiaryPage;
+
+/* --- STYLES --- */
+
+const Header = styled('header')({
+  display: 'flex',
+  justifyContent: 'space-between',
+  margin: '0.9rem',
+});
+
+const LogOutBtn = styled(Button)({
+  borderRadius: '0.25rem',
+  padding: '0.9rem',
+  width: 'fit-content',
+  textDecoration: 'none',
+  backgroundColor: 'green',
+  cursor: 'pointer', // TODO: needs to be added as common style for links and buttons
+});
+
+const Section = styled('section')({
+  marginTop: '15vh',
+  marginBottom: '13vh',
+});
+
+const NewEntryDiv = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '0.5rem',
+});
+
+const EditorAndCardRow = styled('div')({
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '60px',
+  //border: '1px solid red',
+  height: '100%',
+  width: '100%',
+  '@media (max-width: 480px)': {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+const TextEditorArticle = styled('article')({
+  height: '90%',
+  width: '50%',
+  //border: '1px dotted blue',
+});
+
+const CardArticleContainer = styled('div')({
+  overflow: 'auto',
+  width: '50%',
+  backgroundColor: 'rgba(140, 145, 171, 0.2)',
+
+  // TODO: need media queries for common css rules
+  '@media (min-width: 960px)': {
+    width: '50%',
+  },
+
+  '@media (min-width: 1200px)': {
+    width: '50%',
+  },
+});
+
+const CardArticleRow = styled('article')({
+  display: 'flex',
+  justifyContent: 'flex-start',
+  flexFlow: 'row wrap',
+  gap: '10px',
+
+  '@media (max-width: 480px)': {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexGrow: 0,
+    //alignContent: 'flex-end',
+  },
+  '@media (min-width: 1200px)': {
+    width: '100%',
+  },
+});

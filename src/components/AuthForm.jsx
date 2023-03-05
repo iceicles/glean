@@ -5,15 +5,6 @@ import { Controller } from 'react-hook-form';
 import styled from '@emotion/styled';
 import { Button } from './Button';
 
-const Main = styled('div')({
-  height: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '2rem',
-});
-
 const FormTextField = styled(TextField)({
   width: '20rem',
 });
@@ -93,5 +84,15 @@ const AuthFormMUI = (props) => {
     </>
   );
 };
+
+/* --- STYLES --- */
+const Main = styled('div')({
+  height: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '2rem',
+});
 
 export { AuthFormMUI as AuthForm };

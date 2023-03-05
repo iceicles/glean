@@ -3,6 +3,26 @@ import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { fontSize } from '@mui/system';
 
+const Welcome = () => {
+  return (
+    <>
+      <Main>
+        <MainGreeting>Welcome to Glean</MainGreeting>
+        <h2>
+          Create an account for a personalized experienced or continue as guest
+          to try it out!
+        </h2>
+        <Section>
+          <LoginLink to='/auth?mode=login'>Get Access</LoginLink>
+          <LoginLink to='/diary'>Guest</LoginLink>
+        </Section>
+      </Main>
+    </>
+  );
+};
+
+/* --- STYLES --- */
+
 const Section = styled('section')({
   display: 'flex',
   textAlign: 'end',
@@ -30,23 +50,4 @@ const LoginLink = styled(Link)({
 const MainGreeting = styled('h1')({
   fontSize: '8rem',
 });
-
-const Welcome = () => {
-  return (
-    <>
-      <Main>
-        <MainGreeting>Welcome to Glean</MainGreeting>
-        <h2>
-          Create an account for a personalized experienced or continue as guest
-          to try it out!
-        </h2>
-        <Section>
-          <LoginLink to='/auth?mode=login'>Get Access</LoginLink>
-          <LoginLink to='/diary'>Guest</LoginLink>
-        </Section>
-      </Main>
-    </>
-  );
-};
-
 export default Welcome;
