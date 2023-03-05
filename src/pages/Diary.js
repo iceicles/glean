@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import useFirestore from '../hooks/useFirestore';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styled from '@emotion/styled';
 import EntryContainer from '../components/EntryContainer';
+import TextEditor from '../components/TextEditor';
+import DOMPurify from 'dompurify';
 
 const Section = styled('section')({
   marginTop: '15vh',
@@ -56,10 +56,10 @@ const NewEntryDiv = styled('div')({
 });
 
 const DiaryPage = () => {
-  const [editValue, setEditValue] = useState('');
+  const [editorValue, setEditorValue] = useState('');
   const [cardClicked, setCardClicked] = useState(false);
   const [entryIdFS, setEntryIdFS] = useState('No Entry');
-  const [entryValueFS, setEntryValueFS] = useState(editValue);
+  const [entryValueFS, setEntryValueFS] = useState(editorValue);
   const [cardIndex, setCardIndex] = useState();
   const [dataLength, setDataLength] = useState();
   const [error, setError] = useState();
@@ -94,7 +94,7 @@ const DiaryPage = () => {
     colDocs.entriesCollection,
     entryIdFS,
     entryValueFS,
-    editValue
+    editorValue
   );
 
   //TODO: need to fix logout - null errors in console
@@ -122,48 +122,48 @@ const DiaryPage = () => {
   }, [data]);
 
   /* useEffect to handle different saving scenarios based on edit value
-  - user can only save if the editValue has changed - i.e., non empty or <p><br></p> values
+  - user can only save if the editorValue has changed - i.e., non empty or <p><br></p> values
   - save button is disabled when backspace is pressed resulting in <p><br></p>
-  - if the card is clicked and the editValues are the same, save button is disabled until they're not
+  - if the card is clicked and the editorValues are the same, save button is disabled until they're not
   */
   useEffect(() => {
     // if there edit value is a string other than empty string
     // enable save button and allow user to save
-    if (!!editValue) {
+    if (!!editorValue) {
       setDisableSaveBtn(false);
       setUserCanSave(true);
     }
-    // handles the case where backspace is pressed, editValue is <p><br></p> - weird :/
-    if (editValue === '<p><br></p>') {
+    // handles the case where backspace is pressed, editorValue is <p><br></p> - weird :/
+    if (editorValue === '<p><br></p>') {
       setDisableSaveBtn(true);
       return;
     }
     // if the card is clicked and the edit value is the same as the entry in firestore
     if (cardClicked) {
-      if (editValue === data[cardIndex].entry) {
+      if (editorValue === data[cardIndex].entry) {
         setDisableSaveBtn(true);
       }
     }
-  }, [editValue]);
+  }, [editorValue]);
 
   /* handles save click */
   function handleSaveEntry() {
-    if (!editValue) return;
+    if (!editorValue) return;
 
     if (!cardClicked && userCanSave) {
       (newEntryRef.current === 0 || newEntryBtnClicked) &&
         setEntryIdFS(`Entry-${dataLength + 1}`);
       newEntryRef.current = 1;
-      setEntryValueFS(editValue);
+      setEntryValueFS(editorValue);
       setNewEntryBtnClicked(false);
       setUserCanSave(false);
       setDisableFavBtn(false);
       setDisableDelBtn(false);
       setSaveError(null);
     } else if (cardClicked && userCanSave) {
-      data[cardIndex].entry = editValue;
+      data[cardIndex].entry = editorValue;
       setEntryIdFS(`${data[cardIndex].id}`);
-      setEntryValueFS(editValue);
+      setEntryValueFS(editorValue);
       setCardClicked(false);
       setUserCanSave(false);
     } else {
@@ -175,7 +175,7 @@ const DiaryPage = () => {
   function handleCardClicked(editEntry, index) {
     setCardClicked(true);
     setCardIndex(index);
-    setEditValue(editEntry.entry);
+    setEditorValue(editEntry.entry);
     setDisableSaveBtn(true);
   }
 
@@ -183,7 +183,7 @@ const DiaryPage = () => {
   function handleCreateNewEntry() {
     // resets newEntryRef to 0 to allow for additional entry ids
     newEntryRef.current = 0;
-    setEditValue('');
+    setEditorValue('');
     setCardClicked(false);
     setDisableFavBtn(true);
     setDisableDelBtn(true);
@@ -209,10 +209,11 @@ const DiaryPage = () => {
         </NewEntryDiv>
         <EntryContainer>
           <article>
-            <ReactQuill
+            <TextEditor
               theme='snow'
-              value={editValue}
-              onChange={setEditValue}
+              placeholder='Let your imagination flow...'
+              value={editorValue}
+              onChange={setEditorValue}
             />
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <Button onClick={handleSaveEntry} disabled={disableSaveBtn}>
@@ -247,7 +248,7 @@ const DiaryPage = () => {
                           : '',
                     }}
                     onClick={() => handleCardClicked(editEntry, index)}
-                    innerHTML={editEntry.entry}
+                    innerHTML={DOMPurify.sanitize(editEntry.entry)}
                   />
                 </React.Fragment>
               ))}
