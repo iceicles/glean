@@ -56,7 +56,6 @@ const useFirestore = (
         });
       });
       setData(documents);
-      console.log('data - ', data);
     };
 
     return () => unsub();
