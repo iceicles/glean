@@ -3,10 +3,14 @@ import { Button } from '@mui/material';
 
 const ButtonMUI = (props) => {
   return (
-    <Button variant={props.variant} onClick={props.onClick}>
+    <Button
+      disabled={props.disabled}
+      variant={props.variant}
+      onClick={props.onClick}
+    >
       {props.children}
     </Button>
   );
 };
 
-export {ButtonMUI as Button}
+export { ButtonMUI as Button };
