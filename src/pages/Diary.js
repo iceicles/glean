@@ -2,31 +2,33 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import styled from '@emotion/styled';
 import EntryContainer from '../components/EntryContainer';
 import TextEditor from '../components/TextEditor';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getAuth } from 'firebase/auth';
+import styled from '@emotion/styled';
 import DOMPurify from 'dompurify';
 
 const DiaryPage = () => {
   const [editorValue, setEditorValue] = useState('');
-  const [cardClicked, setCardClicked] = useState(false);
   const [entryIdFS, setEntryIdFS] = useState('No Entry');
-  const [entryValueFS, setEntryValueFS] = useState(editorValue);
+  const [entryValueFS, setEntryValueFS] = useState();
   const [cardIndex, setCardIndex] = useState();
   const [dataLength, setDataLength] = useState();
-  const [error, setError] = useState();
   const [disableFavBtn, setDisableFavBtn] = useState(true);
   const [disableDelBtn, setDisableDelBtn] = useState(true);
   const [disableSaveBtn, setDisableSaveBtn] = useState(true);
   const [userCanSave, setUserCanSave] = useState(false);
   const [newEntryBtnClicked, setNewEntryBtnClicked] = useState(false);
+  const [cardClicked, setCardClicked] = useState(false);
+  const [error, setError] = useState();
   const [saveError, setSaveError] = useState();
 
   const navigate = useNavigate();
 
-  const { currentUser, logout } = useAuth();
+  const { logout } = useAuth();
+  const { currentUser } = getAuth(); // fixes currentUser.email issue being null
 
   const getUserName = useCallback(() => {
     const indexOfAt = currentUser.email.split('').indexOf('@');
@@ -34,8 +36,7 @@ const DiaryPage = () => {
     return userName;
   }, [currentUser]);
 
-  //TODO: fix email property of null err being thrown in console
-
+  // TODO: fix an issue where, whenever a user logs in, a blank card shows up when user tries to edit or add new entries
   const colDocs = {
     topCollection: 'Users',
     userName: currentUser.email,
@@ -51,7 +52,6 @@ const DiaryPage = () => {
     editorValue
   );
 
-  //TODO: need to fix logout - null errors in console
   const handleLogout = async () => {
     setError('');
     try {
