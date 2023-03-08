@@ -47,8 +47,8 @@ const DiaryPage = () => {
     colDocs.topCollection,
     colDocs.userName,
     colDocs.entriesCollection,
-    entryIdFS,
-    entryValueFS,
+    entryIdFS, // 'entry-0, entry-1, entry-2...
+    entryValueFS, // this is the culprit - need to make sure this has a value but not the empty string value which always gets a new time stamp
     editorValue
   );
 
@@ -105,6 +105,7 @@ const DiaryPage = () => {
     if (!editorValue) return;
 
     if (!cardClicked && userCanSave) {
+      // user is making a new entry
       (newEntryRef.current === 0 || newEntryBtnClicked) &&
         setEntryIdFS(`Entry-${dataLength + 1}`);
       newEntryRef.current = 1;
@@ -115,6 +116,7 @@ const DiaryPage = () => {
       setDisableDelBtn(false);
       setSaveError(null);
     } else if (cardClicked && userCanSave) {
+      // user is editing a card
       data[cardIndex].entry = editorValue;
       setEntryIdFS(`${data[cardIndex].id}`);
       setEntryValueFS(editorValue);

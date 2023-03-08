@@ -15,7 +15,7 @@ const useFirestore = (
   userName,
   entriesCollection,
   entries,
-  entry,
+  entry = '',
   newData = false
 ) => {
   const [data, setData] = useState([]);
@@ -30,7 +30,7 @@ const useFirestore = (
     newData &&
       setDoc(entryDocumentRef, {
         entry,
-        timeStamp: serverTimestamp(),
+        timeStamp: entry !== '' ? serverTimestamp() : null, // since we order by timeStamp, the first (initial) entry with '' should have none so it doesn't always gets added as the first entry whenever the user logs out, back in, and writes a new entry (since setEditorValue state runs which re-renders the component)
       });
 
     // gets the 'Entries' collection reference
@@ -60,6 +60,8 @@ const useFirestore = (
 
     return () => unsub();
   }, [topCollection, userName, entriesCollection, entries, entry, newData]);
+
+  console.log('data - ', data);
 
   return { data };
 };
