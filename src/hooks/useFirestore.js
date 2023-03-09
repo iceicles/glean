@@ -61,8 +61,6 @@ const useFirestore = (
     return () => unsub();
   }, [topCollection, userName, entriesCollection, entries, entry, newData]);
 
-  console.log('data - ', data);
-
   return { data };
 };
 
