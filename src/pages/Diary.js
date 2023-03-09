@@ -22,6 +22,11 @@ const DiaryPage = () => {
   const [userCanSave, setUserCanSave] = useState(false);
   const [newEntryBtnClicked, setNewEntryBtnClicked] = useState(false);
   const [cardClicked, setCardClicked] = useState(false);
+  const [cardClickedEntryId, setCardClickedEntryId] = useState({
+    cardEntry: '',
+    cardId: '',
+  });
+  const [saveClicked, setSaveClicked] = useState(false);
   const [error, setError] = useState();
   const [saveError, setSaveError] = useState();
 
@@ -78,7 +83,7 @@ const DiaryPage = () => {
   /* useEffect to handle different saving scenarios based on edit value
   - user can only save if the editorValue has changed - i.e., non empty or <p><br></p> values
   - save button is disabled when backspace is pressed resulting in <p><br></p>
-  - if the card is clicked and the editorValues are the same, save button is disabled until they're not
+  
   */
   useEffect(() => {
     // if there edit value is a string other than empty string
@@ -92,13 +97,30 @@ const DiaryPage = () => {
       setDisableSaveBtn(true);
       return;
     }
+  }, [editorValue]);
+
+  /* useEffect to handle the case where 
+  -if the card is clicked and the editorValues are the same, save button is disabled until they're not
+  */
+  useEffect(() => {
     // if the card is clicked and the edit value is the same as the entry in firestore
     if (cardClicked) {
       if (editorValue === data[cardIndex].entry) {
         setDisableSaveBtn(true);
       }
     }
-  }, [editorValue]);
+  }, [editorValue, cardClicked, cardIndex, data]);
+
+  /* checks if a card is clicked and the user makes an edit, and then clicks another card */
+  // TODO: throw a toast/modal when user clicks different card
+  // TODO: this should also apply for when user makes an edit and they try to log off before saving
+  const checkNoSaveOnEntryEdit = () => {
+    if (cardClicked && editorValue !== cardClickedEntryId.cardEntry) {
+      if (saveClicked === false) {
+        setSaveError('hmmmm are you sure you want to leave without saving');
+      }
+    }
+  };
 
   /* handles save click */
   const handleSaveEntry = () => {
@@ -114,7 +136,9 @@ const DiaryPage = () => {
       setUserCanSave(false);
       setDisableFavBtn(false);
       setDisableDelBtn(false);
+      setDisableSaveBtn(true);
       setSaveError(null);
+      setSaveClicked(true);
     } else if (cardClicked && userCanSave) {
       // user is editing a card
       data[cardIndex].entry = editorValue;
@@ -122,17 +146,24 @@ const DiaryPage = () => {
       setEntryValueFS(editorValue);
       setCardClicked(false);
       setUserCanSave(false);
-    } else {
-      setSaveError('You need to edit your entry before clicking save again.');
+      setDisableFavBtn(false);
+      setDisableDelBtn(false);
+      setDisableSaveBtn(true);
+      setSaveClicked(true);
     }
+    setSaveClicked(false);
   };
 
   /* handles card click*/
   const handleCardClicked = (editEntry, index) => {
     setCardClicked(true);
+    setCardClickedEntryId({ cardEntry: editEntry.entry, cardId: editEntry.id });
     setCardIndex(index);
     setEditorValue(editEntry.entry);
     setDisableSaveBtn(true);
+    setDisableFavBtn(false);
+    setDisableDelBtn(false);
+    checkNoSaveOnEntryEdit();
   };
 
   /* handles new button click */
