@@ -3,35 +3,33 @@ import { projectFirestore } from '../firebase/config';
 import {
   doc,
   collection,
-  getDocs,
-  setDoc,
   query,
   orderBy,
   serverTimestamp,
+  onSnapshot,
+  updateDoc,
+  addDoc,
 } from 'firebase/firestore';
 
+/* 
+Handles reading and writing to firestore
+*/
 const useFirestore = (
   topCollection,
   userName,
   entriesCollection,
-  entries,
   entry = '',
-  newData = false
+  updatedEntry = '',
+  entryId
 ) => {
   const [data, setData] = useState([]);
+
   useEffect(() => {
-    // gets the 'Entry' document reference
+    // document reference with auto generated id
     const entryDocumentRef = doc(
       projectFirestore,
-      `${topCollection}/${userName}/${entriesCollection}/${entries}`
+      `${topCollection}/${userName}/${entriesCollection}/${entryId}`
     );
-
-    // creates a new document with entry as its data
-    newData &&
-      setDoc(entryDocumentRef, {
-        entry,
-        timeStamp: entry !== '' ? serverTimestamp() : null, // since we order by timeStamp, the first (initial) entry with '' should have none so it doesn't always gets added as the first entry whenever the user logs out, back in, and writes a new entry (since setEditorValue state runs which re-renders the component)
-      });
 
     // gets the 'Entries' collection reference
     const entriesCollectionRef = collection(
@@ -39,13 +37,26 @@ const useFirestore = (
       `${topCollection}/${userName}/${entriesCollection}`
     );
 
+    // making new entry
+    if (!!entry && updatedEntry === '') {
+      addDoc(entriesCollectionRef, {
+        entry,
+        timeStamp: serverTimestamp(),
+      });
+      // updating an existing entry
+    } else if (!!updatedEntry) {
+      updateDoc(entryDocumentRef, {
+        entry: updatedEntry,
+        timeStamp: serverTimestamp(),
+      });
+    }
+
     // orders the document in 'Entries' collection by timeStamp in desc order
     const colQuery = query(entriesCollectionRef, orderBy('timeStamp', 'desc'));
 
     // listens to and returns changes in firestore
-    const unsub = async () => {
+    const unsub = onSnapshot(colQuery, (docSnap) => {
       // using getDocs instead of onSnapshot so that the card components don't always re-render when data changes
-      const docSnap = await getDocs(colQuery);
       // loop through the documents in Entries collection and store in an array
       const documents = [];
       docSnap.forEach((doc) => {
@@ -56,10 +67,17 @@ const useFirestore = (
         });
       });
       setData(documents);
-    };
+    });
 
     return () => unsub();
-  }, [topCollection, userName, entriesCollection, entries, entry, newData]);
+  }, [
+    topCollection,
+    userName,
+    entriesCollection,
+    entry,
+    updatedEntry,
+    entryId,
+  ]);
 
   return { data };
 };

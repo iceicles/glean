@@ -18,6 +18,7 @@ const TextEditor = (props) => {
         placeholder={props.placeholder}
         value={props.value}
         onChange={props.onChange}
+        readOnly={props.readOnly}
         modules={{
           toolbar: TOOLBAR_OPTIONS,
           'emoji-toolbar': true,

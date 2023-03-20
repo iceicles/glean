@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import useFirestore from '../hooks/useFirestore';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -9,26 +9,28 @@ import { useAuth } from '../contexts/AuthContext';
 import { getAuth } from 'firebase/auth';
 import styled from '@emotion/styled';
 import DOMPurify from 'dompurify';
+import deleteDocFS from '../hooks/deleteDocFS';
 
 const DiaryPage = () => {
   const [editorValue, setEditorValue] = useState('');
-  const [entryIdFS, setEntryIdFS] = useState('No Entry');
   const [entryValueFS, setEntryValueFS] = useState();
+  const [updatedEntryFS, setUpdatedEntryFS] = useState();
+  const [entryIdFS, setEntryIdFS] = useState();
   const [cardIndex, setCardIndex] = useState();
-  const [dataLength, setDataLength] = useState();
   const [disableFavBtn, setDisableFavBtn] = useState(true);
   const [disableDelBtn, setDisableDelBtn] = useState(true);
   const [disableSaveBtn, setDisableSaveBtn] = useState(true);
   const [userCanSave, setUserCanSave] = useState(false);
-  const [newEntryBtnClicked, setNewEntryBtnClicked] = useState(false);
   const [cardClicked, setCardClicked] = useState(false);
+  const [saveClicked, setSaveClicked] = useState(false);
+  const [delBtnClicked, setDelBtnClicked] = useState(false);
   const [cardClickedEntryId, setCardClickedEntryId] = useState({
     cardEntry: '',
     cardId: '',
   });
-  const [saveClicked, setSaveClicked] = useState(false);
   const [error, setError] = useState();
   const [saveError, setSaveError] = useState();
+  const [yesDelete, setYesDelete] = useState(false);
 
   const navigate = useNavigate();
 
@@ -41,20 +43,53 @@ const DiaryPage = () => {
     return userName;
   }, [currentUser]);
 
-  // TODO: fix an issue where, whenever a user logs in, a blank card shows up when user tries to edit or add new entries
   const colDocs = {
     topCollection: 'Users',
     userName: currentUser.email,
     entriesCollection: 'Entries',
   };
 
+  const getDocToDelete = useMemo(() => {
+    if (delBtnClicked) {
+      return `${cardClickedEntryId.cardId}`;
+    }
+  }, [delBtnClicked, cardClickedEntryId.cardId]);
+
+  const yesDeleteHandler = () => {
+    setEditorValue('');
+    setYesDelete(true);
+    setCardClicked(false);
+  };
+
+  const noDeleteHandler = () => {
+    setDelBtnClicked(false);
+    setCardClicked(true);
+    setDisableFavBtn(false);
+    setDisableDelBtn(false);
+  };
+
+  // useEffect to reset item to delete
+  useEffect(() => {
+    if (delBtnClicked) {
+      setDisableFavBtn(true);
+      setDisableDelBtn(true);
+    }
+  }, [delBtnClicked]);
+
+  deleteDocFS(
+    colDocs.topCollection,
+    colDocs.userName,
+    colDocs.entriesCollection,
+    yesDelete && getDocToDelete
+  );
+
   const { data } = useFirestore(
     colDocs.topCollection,
     colDocs.userName,
     colDocs.entriesCollection,
-    entryIdFS, // 'entry-0, entry-1, entry-2...
-    entryValueFS, // this is the culprit - need to make sure this has a value but not the empty string value which always gets a new time stamp
-    editorValue
+    entryValueFS,
+    updatedEntryFS,
+    entryIdFS
   );
 
   const handleLogout = async () => {
@@ -67,26 +102,12 @@ const DiaryPage = () => {
     }
   };
 
-  /* Ref to keep track of when the user clicks 'New' button */
-  const newEntryRef = useRef(0);
-
-  // [DONE] TODO: disable save button at first then enable when user starts typing
-  // [DONE] TODO: make sure when a card is clicked the save btn is disabled until user starts..
-  // ...typing, then it should be enabled
-
-  /* useEffect to capture data length excluding the initial entry (i.e., '') */
-  useEffect(() => {
-    let dataLength = data.length - 1;
-    setDataLength(dataLength);
-  }, [data]);
-
   /* useEffect to handle different saving scenarios based on edit value
   - user can only save if the editorValue has changed - i.e., non empty or <p><br></p> values
   - save button is disabled when backspace is pressed resulting in <p><br></p>
-  
   */
   useEffect(() => {
-    // if there edit value is a string other than empty string
+    // if the edit value is a string other than empty string
     // enable save button and allow user to save
     if (!!editorValue) {
       setDisableSaveBtn(false);
@@ -103,20 +124,22 @@ const DiaryPage = () => {
   -if the card is clicked and the editorValues are the same, save button is disabled until they're not
   */
   useEffect(() => {
-    // if the card is clicked and the edit value is the same as the entry in firestore
     if (cardClicked) {
-      if (editorValue === data[cardIndex].entry) {
+      if (
+        editorValue === cardClickedEntryId.cardEntry &&
+        delBtnClicked === false
+      ) {
         setDisableSaveBtn(true);
       }
     }
-  }, [editorValue, cardClicked, cardIndex, data]);
+  }, [cardClicked, editorValue, delBtnClicked, cardClickedEntryId.cardEntry]);
 
   /* checks if a card is clicked and the user makes an edit, and then clicks another card */
   // TODO: throw a toast/modal when user clicks different card
   // TODO: this should also apply for when user makes an edit and they try to log off before saving
   const checkNoSaveOnEntryEdit = () => {
     if (cardClicked && editorValue !== cardClickedEntryId.cardEntry) {
-      if (saveClicked === false) {
+      if (saveClicked === false && delBtnClicked === false) {
         setSaveError('hmmmm are you sure you want to leave without saving');
       }
     }
@@ -128,22 +151,18 @@ const DiaryPage = () => {
 
     if (!cardClicked && userCanSave) {
       // user is making a new entry
-      (newEntryRef.current === 0 || newEntryBtnClicked) &&
-        setEntryIdFS(`Entry-${dataLength + 1}`);
-      newEntryRef.current = 1;
       setEntryValueFS(editorValue);
-      setNewEntryBtnClicked(false);
+      setEditorValue('');
+      setDelBtnClicked(false);
       setUserCanSave(false);
       setDisableFavBtn(false);
-      setDisableDelBtn(false);
       setDisableSaveBtn(true);
       setSaveError(null);
       setSaveClicked(true);
     } else if (cardClicked && userCanSave) {
       // user is editing a card
-      data[cardIndex].entry = editorValue;
-      setEntryIdFS(`${data[cardIndex].id}`);
-      setEntryValueFS(editorValue);
+      setEntryIdFS(`${cardClickedEntryId.cardId}`);
+      setUpdatedEntryFS(editorValue);
       setCardClicked(false);
       setUserCanSave(false);
       setDisableFavBtn(false);
@@ -154,27 +173,39 @@ const DiaryPage = () => {
     setSaveClicked(false);
   };
 
+  /* handles card delete */
+  const handleDeleteEntry = () => {
+    setDelBtnClicked(true);
+  };
+
   /* handles card click*/
   const handleCardClicked = (editEntry, index) => {
     setCardClicked(true);
-    setCardClickedEntryId({ cardEntry: editEntry.entry, cardId: editEntry.id });
+    setDelBtnClicked(false);
+    setCardClickedEntryId({
+      cardEntry: editEntry.entry,
+      cardId: editEntry.id,
+    });
     setCardIndex(index);
     setEditorValue(editEntry.entry);
     setDisableSaveBtn(true);
     setDisableFavBtn(false);
     setDisableDelBtn(false);
     checkNoSaveOnEntryEdit();
+    setYesDelete(false);
   };
 
   /* handles new button click */
   const handleCreateNewEntry = () => {
-    // resets newEntryRef to 0 to allow for additional entry ids
-    newEntryRef.current = 0;
     setEditorValue('');
+    setEntryValueFS();
+    setEntryIdFS();
+    setUpdatedEntryFS();
     setCardClicked(false);
+    setDelBtnClicked(false);
     setDisableFavBtn(true);
     setDisableDelBtn(true);
-    setNewEntryBtnClicked(true);
+    setYesDelete(false);
   };
 
   return (
@@ -190,6 +221,13 @@ const DiaryPage = () => {
       </Header>
       {error && <h1 style={{ color: 'red' }}>{error}</h1>}
       <Section>
+        {delBtnClicked && (
+          <div>
+            Are you sure you want to delete?
+            <button onClick={yesDeleteHandler}>Yes</button>
+            <button onClick={noDeleteHandler}>No</button>
+          </div>
+        )}
         <NewEntryDiv>
           <i>Create a new entry...</i>
           <Button onClick={handleCreateNewEntry}>New</Button>
@@ -202,6 +240,7 @@ const DiaryPage = () => {
                 placeholder='Let your imagination flow...'
                 value={editorValue}
                 onChange={setEditorValue}
+                readOnly={delBtnClicked}
               />
               {/* </article> */}
               <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -209,14 +248,16 @@ const DiaryPage = () => {
                   Save
                 </Button>
                 <Button disabled={disableFavBtn}>Favorite</Button>
-                <Button disabled={disableDelBtn}>Delete</Button>
+                <Button onClick={handleDeleteEntry} disabled={disableDelBtn}>
+                  Delete
+                </Button>
               </div>
               <p>{saveError}</p>
             </TextEditorArticle>
             <CardArticleContainer>
               <CardArticleRow>
                 {data &&
-                  data.slice(0, -1).map((editEntry, index) => (
+                  data.map((editEntry, index) => (
                     <React.Fragment key={index}>
                       <Card
                         key={index}
@@ -225,8 +266,10 @@ const DiaryPage = () => {
                         variant={'outlined'}
                         style={{
                           border:
-                            cardClicked && cardIndex === index
-                              ? '0.188rem solid green'
+                            cardClicked &&
+                            cardIndex === index &&
+                            delBtnClicked === false
+                              ? '0.188rem solid black'
                               : '',
                         }}
                         onClick={() => handleCardClicked(editEntry, index)}
